@@ -12,7 +12,7 @@ When the server is started, three threads are launched:
 
 - **Main thread**: This thread is responsible for exchanging messages between clients in a chat room. It also checks for server command inputs. Currently, only the server stop command is supported. All messages exchanged between users are stored in the message repository.
 
-The server-side application is implemented using the Spring framework. Configuration is done using properties files and bean dependency injection. Communication between the server and the client happens using the socket API in JSON format.
+The server-side application is implemented using the Spring framework. Configuration is done using properties files. Dependency injection used for bean creation. Communication between the server and the client happens using the socket API in JSON format.
 
 ## Client Side
 
