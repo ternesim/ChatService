@@ -34,16 +34,6 @@ public class SocketsApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public DataSource dataSource() {
-//        EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-//        builder.setType(EmbeddedDatabaseType.HSQL);
-//        builder.addScript("/schema.sql");
-//        builder.addScript("/data.sql");
-//        return builder.build();
-//    }
-
-    //@Bean(name = "hikariDataSource")
     @Bean
     public DataSource hikariDataSource() {
         HikariConfig config = new HikariConfig();
