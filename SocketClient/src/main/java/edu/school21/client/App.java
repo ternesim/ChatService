@@ -57,7 +57,8 @@ public class App {
                     break;
                 }
             }
-        } catch (Exception ignored) {} finally {
+        } catch (Exception ignored) {
+        } finally {
             scanner.close();
             listener.interrupt();
             clientSocket.close();
