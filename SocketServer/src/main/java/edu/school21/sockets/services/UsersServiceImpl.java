@@ -45,12 +45,4 @@ public class UsersServiceImpl implements UsersService {
         } else return false;
     }
 
-//    @Override
-//    public boolean signIn1(String login, String password) {
-//        Optional<User> optionalUser = usersRepository.findByLogin(login);
-//        if (optionalUser.isPresent()) {
-//            System.out.println(optionalUser.get());
-//            return passwordEncoder.matches(password, optionalUser.get().getPassword());
-//        } else return false;
-//    }
 }
