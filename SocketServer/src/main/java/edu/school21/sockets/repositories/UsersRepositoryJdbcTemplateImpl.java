@@ -5,12 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,14 +31,14 @@ public class UsersRepositoryJdbcTemplateImpl implements UsersRepository {
 
     @Override
     public Optional<User> findById(Long id) {
-        User user = jdbcTemplate.queryForObject(
+        List<User> users = jdbcTemplate.query(
                 "SELECT id, login, password FROM \"user\" WHERE id=?",
-                (resultSet, rowNum) -> new User(
-                        resultSet.getLong("id"),
-                        resultSet.getString("login"),
-                        resultSet.getString("password")
+                (rs, i) -> new User(
+                        rs.getLong("id"),
+                        rs.getString("login"),
+                        rs.getString("password")
                 ), id);
-        return user == null ? Optional.empty() : Optional.of(user);
+        return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 
     @Override
@@ -44,34 +48,32 @@ public class UsersRepositoryJdbcTemplateImpl implements UsersRepository {
                 (resultSet, rowNum) -> new User(
                         resultSet.getLong("id"),
                         resultSet.getString("login"),
-                        resultSet.getString("password")
-                ));
+                        resultSet.getString("password")));
     }
 
     @Override
-    public void save(User entity) {
+    public User save(User user) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(
                             "INSERT INTO \"user\" (login, password) VALUES (?, ?)", new String[]{"id"});
-                    ps.setString(1, entity.getLogin());
-                    ps.setString(2, entity.getPassword());
+                    ps.setString(1, user.getLogin());
+                    ps.setString(2, user.getPassword());
                     return ps;
-                },
-                keyHolder
-        );
-        entity.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+                }, keyHolder);
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        return user;
     }
 
     @Override
-    public void update(User entity) {
+    public User update(User user) {
         jdbcTemplate.update(
                 "UPDATE \"user\" SET id=?, login=?, password=? WHERE id=?",
-                entity.getId(),
-                entity.getLogin(),
-                entity.getPassword()
-        );
+                user.getId(),
+                user.getLogin(),
+                user.getPassword());
+        return user;
     }
 
     @Override
@@ -81,17 +83,13 @@ public class UsersRepositoryJdbcTemplateImpl implements UsersRepository {
 
     @Override
     public Optional<User> findByLogin(String login) {
-        Optional<User> optionalUser = Optional.empty();
-        try {
-            User user = jdbcTemplate.queryForObject(
-                    "SELECT id, login, password FROM \"user\" WHERE login=?",
-                    (resultSet, rowNum) -> new User(
-                            resultSet.getLong("id"),
-                            resultSet.getString("login"),
-                            resultSet.getString("password")
-                    ), login);
-            optionalUser = Optional.of(user);
-        } catch (EmptyResultDataAccessException ignored) {}
-        return optionalUser;
+        List<User> users = jdbcTemplate.query(
+                "SELECT * FROM \"user\" WHERE id = ?",
+                (rs, i) -> new User(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("email")
+                ), login);
+        return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 }

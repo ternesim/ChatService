@@ -1,22 +1,22 @@
 package edu.school21.sockets.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.school21.sockets.models.Message;
+import edu.school21.sockets.models.User;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.sql.Timestamp;
 import java.util.Objects;
 
 public class Client {
-    private final PrintWriter out;
-    private final BufferedReader in;
-    private final String sender;
-    private final Socket socket;
-    private final Long roomId;
+    private  PrintWriter out;
+    private  BufferedReader in;
+    private  String sender;
+    private  Socket socket;
+    private  Long roomId;
+    private User user;
     private final ObjectMapper objectMapper;
 
     public Client(Socket socket, PrintWriter out, BufferedReader in,
@@ -29,23 +29,19 @@ public class Client {
         this.objectMapper = objectMapper;
     }
 
-    public void sendMessage(String text) {
-        String json;
-        try {
-            Message message = new Message(
-                    "server", text, 0L, new Timestamp(System.currentTimeMillis()));
-            json = objectMapper.writeValueAsString(message);
-            out.println(json);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+    public Client(Socket socket, ObjectMapper objectMapper)  {
+        this.socket = socket;
+        this.objectMapper = objectMapper;
     }
 
-    public String receiveMessage() {
+
+    public void send(JSONObject json) {
+        out.println(json);
+    }
+
+    JSONObject receiveRequest() {
         try {
-            String json = in.readLine();
-            Message message = objectMapper.readValue(json, Message.class);
-            return message.getText();
+            return new JSONObject(in.readLine());
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("message receiving error");
@@ -99,4 +95,15 @@ public class Client {
         return socket;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public boolean isAuthenticated() {
+        return user != null;
+    }
 }

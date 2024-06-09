@@ -2,6 +2,7 @@ package edu.school21.sockets.services;
 
 import edu.school21.sockets.models.User;
 import edu.school21.sockets.repositories.UsersRepository;
+import edu.school21.sockets.server.AuthException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,7 +14,6 @@ import java.util.Optional;
 public class UsersServiceImpl implements UsersService {
 
     UsersRepository usersRepository;
-
     PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -25,24 +25,19 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public boolean signUp(String login, String password) {
-        Optional<User> optionalUser = usersRepository.findByLogin(login);
-        if (optionalUser.isPresent()) {
-            return false;
-        } else {
-            usersRepository.save(new User(login, passwordEncoder.encode(password)));
-            return true;
-        }
+    public User signUp(String login, String password) throws AuthException {
+        usersRepository.findByLogin(login)
+                .ifPresent(x -> {throw new AuthException();});
+        User user = new User(login, password);
+        usersRepository.save(user);
+        return user;
     }
 
     @Override
-    public boolean signIn(User user) {
-        Optional<User> optionalUser = usersRepository.findByLogin(user.getLogin());
-        if (optionalUser.isPresent()) {
-            System.out.println(optionalUser.get());
-            user.setId(optionalUser.get().getId());
-            return passwordEncoder.matches(user.getPassword(), optionalUser.get().getPassword());
-        } else return false;
+    public User signIn(String login, String password) throws AuthException {
+        return usersRepository.findByLogin(login)
+                .filter(user -> user.getPassword().equals(password))
+                .orElseThrow(AuthException::new);
     }
 
 }

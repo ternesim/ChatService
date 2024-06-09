@@ -1,9 +1,10 @@
 package edu.school21.sockets.services;
 
 import edu.school21.sockets.models.User;
+import edu.school21.sockets.server.AuthException;
 
 public interface UsersService {
-    boolean signUp(String login, String password);
+    User signUp(String login, String password) throws AuthException;
 
-    boolean signIn(User user);
+    User signIn(String login, String password) throws AuthException;
 }
