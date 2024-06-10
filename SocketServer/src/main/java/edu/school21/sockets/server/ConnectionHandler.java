@@ -26,6 +26,7 @@ public class ConnectionHandler extends Thread {
 
     @Override
     public void run() {
+
         while (!Thread.interrupted()) {
 
             try {
@@ -38,6 +39,7 @@ public class ConnectionHandler extends Thread {
 
             clients.add(new Client(clientSocket, objectMapper));
             System.out.println(clientSocket + " connected");
+            System.out.println("Clients size CH " + clients.size());
         }
 
         try {

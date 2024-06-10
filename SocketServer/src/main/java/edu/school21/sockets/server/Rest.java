@@ -28,45 +28,51 @@ public class Rest {
         ConnectionHandler connectionHandler = new ConnectionHandler(port, clients);
         connectionHandler.start();
 
-        for (int i = 0; i < clients.size(); i++) {
+        while (true) {
 
-            Client client = clients.get(i);
-            JSONObject json = client.receiveRequest();
-            RequestType requestType = json.optEnum(RequestType.class, "requestType", RequestType.UNDEFINED);
+            //System.out.println("Clients size " + clients.size());
 
-            User user;
-            JSONObject responseJson = new JSONObject();
-            switch (requestType) {
+            for (int i = 0; i < clients.size(); i++) {
 
-                case WELCOME:
-                    responseJson.put("WelcomeRequest", "Hello from server");
+                Client client = clients.get(i);
+                JSONObject json = client.receiveRequest();
+                System.out.println("From client:");
+                System.out.println("From client: " + json);
+                RequestType requestType = json.optEnum(RequestType.class, "requestType", RequestType.UNDEFINED);
 
-                case SIGN_IN:
-                    try {
-                        user = usersService.signIn(json.getString("Login"), json.getString("Password"));
-                        client.setUser(user);
-                        responseJson.put("SignInResult", "Success");
-                    } catch (AuthException e) {
-                        responseJson.put("SignInResult", "Failure");
-                    }
-                    break;
+                User user;
+                JSONObject responseJson = new JSONObject();
+                switch (requestType) {
 
-                case SIGN_UP:
-                    try {
-                        user = usersService.signUp(json.getString("Login"), json.getString("Password"));
-                        client.setUser(user);
-                        responseJson.put("SignUpResult", "Success");
-                    } catch (AuthException e) {
-                        responseJson.put("SignUpResult", "Failure");
-                    }
-                    break;
+                    case WELCOME:
+                        responseJson.put("WelcomeRequest", "Hello from server");
 
-                case ROOMS_LIST:
-                    responseJson.put("RoomList", roomsService.getRoomList());
+                    case SIGN_IN:
+                        try {
+                            user = usersService.signIn(json.getString("Login"), json.getString("Password"));
+                            client.setUser(user);
+                            responseJson.put("SignInResult", "Success");
+                        } catch (AuthException e) {
+                            responseJson.put("SignInResult", "Failure");
+                        }
+                        break;
+
+                    case SIGN_UP:
+                        try {
+                            user = usersService.signUp(json.getString("Login"), json.getString("Password"));
+                            client.setUser(user);
+                            responseJson.put("SignUpResult", "Success");
+                        } catch (AuthException e) {
+                            responseJson.put("SignUpResult", "Failure");
+                        }
+                        break;
+
+                    case ROOMS_LIST:
+                        responseJson.put("RoomList", roomsService.getRoomList());
+
+                }
 
             }
-
-
         }
     }
 
