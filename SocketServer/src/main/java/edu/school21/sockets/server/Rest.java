@@ -20,6 +20,10 @@ public class Rest {
         WELCOME, SIGN_IN, SIGN_UP, ROOMS_LIST, UNDEFINED
     }
 
+    enum Result {
+        SUCCESS, FAILURE
+    }
+
     List<Client> clients;
 
     public void start(int port) throws IOException {
@@ -30,30 +34,38 @@ public class Rest {
 
         while (true) {
 
-            //System.out.println("Clients size " + clients.size());
+            System.out.println("while Clients size " + clients.size());
+
+
 
             for (int i = 0; i < clients.size(); i++) {
 
+
                 Client client = clients.get(i);
+
+                System.out.println("before receive");
+
                 JSONObject json = client.receiveRequest();
                 System.out.println("From client:");
                 System.out.println("From client: " + json);
                 RequestType requestType = json.optEnum(RequestType.class, "requestType", RequestType.UNDEFINED);
 
                 User user;
+                Result result;
                 JSONObject responseJson = new JSONObject();
                 switch (requestType) {
 
                     case WELCOME:
-                        responseJson.put("WelcomeRequest", "Hello from server");
+                        responseJson.put("Response", "Hello from server");
 
                     case SIGN_IN:
                         try {
                             user = usersService.signIn(json.getString("Login"), json.getString("Password"));
                             client.setUser(user);
-                            responseJson.put("SignInResult", "Success");
+                            responseJson.put("Result", "Success");
                         } catch (AuthException e) {
-                            responseJson.put("SignInResult", "Failure");
+                            responseJson.put("Result", "Failure");
+                            responseJson.put("Message", e.getMessage());
                         }
                         break;
 
@@ -61,16 +73,27 @@ public class Rest {
                         try {
                             user = usersService.signUp(json.getString("Login"), json.getString("Password"));
                             client.setUser(user);
-                            responseJson.put("SignUpResult", "Success");
+                            responseJson.put("Result", "Success");
                         } catch (AuthException e) {
-                            responseJson.put("SignUpResult", "Failure");
+                            responseJson.put("Result", "Failure");
                         }
                         break;
 
                     case ROOMS_LIST:
+                        responseJson.put("Result", "Success");
                         responseJson.put("RoomList", roomsService.getRoomList());
+                        break;
+
+                    case UNDEFINED:
+                        System.err.println("Undefined request type");
+                        break;
+
+                    default:
+                        System.err.println("The request type was not processed.");
 
                 }
+
+                client.send(responseJson);
 
             }
         }

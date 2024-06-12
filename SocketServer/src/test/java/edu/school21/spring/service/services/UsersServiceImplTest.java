@@ -16,9 +16,6 @@ public class UsersServiceImplTest {
 
     @Test
     void WhenSgnInJsonRe() throws IOException, InterruptedException {
-//        Rest server = new Rest();
-//        server.start(6667);
-
         Thread th = new Thread(() -> {
             try {
                 new Rest().start(6667);
@@ -39,11 +36,14 @@ public class UsersServiceImplTest {
 
         //Reader b = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream());
+        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         JSONObject json = new JSONObject();
         json.put("WelcomeRequest", "Hello from client");
         out.println(json);
+        //out.println("Hello test");
         System.out.println(in.readLine());
+        //System.out.println(in.readLine());
+        //System.out.println(in.readLine());
 
     }
 }

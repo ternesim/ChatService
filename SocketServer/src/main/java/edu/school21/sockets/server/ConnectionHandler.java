@@ -26,26 +26,16 @@ public class ConnectionHandler extends Thread {
 
     @Override
     public void run() {
-
-        while (!Thread.interrupted()) {
-
-            try {
-                clientSocket = serverSocket.accept();
-            } catch (SocketTimeoutException e) {
-                continue;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            clients.add(new Client(clientSocket, objectMapper));
-            System.out.println(clientSocket + " connected");
-            System.out.println("Clients size CH " + clients.size());
-        }
-
         try {
+            while (!Thread.interrupted()) {
+                try {
+                    clientSocket = serverSocket.accept();
+                    clients.add(new Client(clientSocket, objectMapper));
+                } catch (SocketTimeoutException ignored) {}
+            }
             serverSocket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Connection handler error");
         }
     }
 
