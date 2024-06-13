@@ -8,6 +8,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -28,76 +30,99 @@ public class Rest {
 
     public void start(int port) throws IOException {
 
-        List<Client> clients = new ArrayList<>();
+        List<Client> clients = Collections.synchronizedList(new ArrayList<>());
         ConnectionHandler connectionHandler = new ConnectionHandler(port, clients);
         connectionHandler.start();
 
+        //System.out.println("Rest before while");
+        //System.out.println("before while Clients size " + clients.size());
+
         while (true) {
 
-            System.out.println("while Clients size " + clients.size());
+            synchronized (clients) {
+                for (Client client : clients) {
 
+                    //System.out.println("before receive");
 
+                    JSONObject receivedJson = client.receiveRequest();
+                    System.out.println("From client:");
+                    System.out.println("From client: " + receivedJson);
+                    RequestType requestType = receivedJson.optEnum(
+                            RequestType.class, "requestType", RequestType.UNDEFINED);
+                    User user;
+                    JSONObject responseJson = new JSONObject();
 
-            for (int i = 0; i < clients.size(); i++) {
+                    try {
+                        switch (requestType) {
+                            case WELCOME:
+                                onSuccess(responseJson);
+                                break;
 
+                            case SIGN_IN:
+                                try {
+                                    user = usersService.signIn(
+                                            receivedJson.getString("Login"),
+                                            receivedJson.getString("Password"));
+                                    client.setUser(user);
+                                    onSuccess(responseJson);
+                                } catch (AuthException e) {
+                                    onFailure(receivedJson, e.getMessage());
+                                }
+                                break;
 
-                Client client = clients.get(i);
+                            case SIGN_UP:
+                                try {
+                                    user = usersService.signUp(
+                                            receivedJson.getString("Login"),
+                                            receivedJson.getString("Password"));
+                                    client.setUser(user);
+                                    onSuccess(responseJson);
+                                } catch (AuthException e) {
+                                    onFailure(receivedJson, e.getMessage());
+                                }
+                                break;
 
-                System.out.println("before receive");
+                            case ROOMS_LIST:
+                                //if (client.isAuthenticated()) {
+                                if (true) {
+                                    onSuccess(responseJson);
+                                    //responseJson.put("List", roomsService.getRoomList());
+                                    String[] l = new String[]{"AA", "BB"};
+                                    responseJson.put("List", l);
+                                } else {
+                                    onFailure(responseJson, "User not authenticated");
+                                }
+                                break;
 
-                JSONObject json = client.receiveRequest();
-                System.out.println("From client:");
-                System.out.println("From client: " + json);
-                RequestType requestType = json.optEnum(RequestType.class, "requestType", RequestType.UNDEFINED);
+                            case UNDEFINED:
+                                String messageForUndefined = "Undefined request type";
+                                System.err.println(messageForUndefined);
+                                onFailure(responseJson, messageForUndefined);
+                                break;
 
-                User user;
-                Result result;
-                JSONObject responseJson = new JSONObject();
-                switch (requestType) {
+                            default:
+                                String messageForDefault = "Internal server error";
+                                System.err.println(messageForDefault);
+                                onFailure(responseJson, messageForDefault);
+                            } catch (Exception e) {
 
-                    case WELCOME:
-                        responseJson.put("Response", "Hello from server");
+                            }
+                    }
 
-                    case SIGN_IN:
-                        try {
-                            user = usersService.signIn(json.getString("Login"), json.getString("Password"));
-                            client.setUser(user);
-                            responseJson.put("Result", "Success");
-                        } catch (AuthException e) {
-                            responseJson.put("Result", "Failure");
-                            responseJson.put("Message", e.getMessage());
-                        }
-                        break;
-
-                    case SIGN_UP:
-                        try {
-                            user = usersService.signUp(json.getString("Login"), json.getString("Password"));
-                            client.setUser(user);
-                            responseJson.put("Result", "Success");
-                        } catch (AuthException e) {
-                            responseJson.put("Result", "Failure");
-                        }
-                        break;
-
-                    case ROOMS_LIST:
-                        responseJson.put("Result", "Success");
-                        responseJson.put("RoomList", roomsService.getRoomList());
-                        break;
-
-                    case UNDEFINED:
-                        System.err.println("Undefined request type");
-                        break;
-
-                    default:
-                        System.err.println("The request type was not processed.");
+                    client.send(responseJson);
 
                 }
-
-                client.send(responseJson);
-
             }
         }
     }
 
+    void onFailure(JSONObject json, String message) {
+        json.put("Result", "Failure");
+        json.put("Message", message);
+    }
+
+    void onSuccess(JSONObject json) {
+        json.put("Result", "Success");
+    }
 
 }
