@@ -52,67 +52,64 @@ public class Rest {
                     User user;
                     JSONObject responseJson = new JSONObject();
 
-                    try {
-                        switch (requestType) {
-                            case WELCOME:
+                    switch (requestType) {
+                        case WELCOME:
+                            responseJson.put("WelcomeMessage", "Hello from server");
+                            break;
+
+                        case SIGN_IN:
+                            String signLogin = receivedJson.getString("Login");
+                            String signPass = receivedJson.getString("Password");
+                            User signedUser = usersService.signIn(signLogin, signPass);
+                            client.setUser(signedUser);
+                            break;
+
+                        case SIGN_UP:
+                            String newLogin = receivedJson.getString("Login");
+                            String newPass = receivedJson.getString("Password");
+                            User newUser = usersService.signUp(newLogin, newPass);
+                            client.setUser(newUser);
+                            break;
+
+                        case ROOMS_LIST:
+                            //if (client.isAuthenticated()) {
+                            if (true) {
                                 onSuccess(responseJson);
-                                break;
-
-                            case SIGN_IN:
-                                try {
-                                    user = usersService.signIn(
-                                            receivedJson.getString("Login"),
-                                            receivedJson.getString("Password"));
-                                    client.setUser(user);
-                                    onSuccess(responseJson);
-                                } catch (AuthException e) {
-                                    onFailure(receivedJson, e.getMessage());
-                                }
-                                break;
-
-                            case SIGN_UP:
-                                try {
-                                    user = usersService.signUp(
-                                            receivedJson.getString("Login"),
-                                            receivedJson.getString("Password"));
-                                    client.setUser(user);
-                                    onSuccess(responseJson);
-                                } catch (AuthException e) {
-                                    onFailure(receivedJson, e.getMessage());
-                                }
-                                break;
-
-                            case ROOMS_LIST:
-                                //if (client.isAuthenticated()) {
-                                if (true) {
-                                    onSuccess(responseJson);
-                                    //responseJson.put("List", roomsService.getRoomList());
-                                    String[] l = new String[]{"AA", "BB"};
-                                    responseJson.put("List", l);
-                                } else {
-                                    onFailure(responseJson, "User not authenticated");
-                                }
-                                break;
-
-                            case UNDEFINED:
-                                String messageForUndefined = "Undefined request type";
-                                System.err.println(messageForUndefined);
-                                onFailure(responseJson, messageForUndefined);
-                                break;
-
-                            default:
-                                String messageForDefault = "Internal server error";
-                                System.err.println(messageForDefault);
-                                onFailure(responseJson, messageForDefault);
-                            } catch (Exception e) {
-
+                                //responseJson.put("List", roomsService.getRoomList());
+                                String[] l = new String[]{"AA", "BB"};
+                                responseJson.put("List", l);
+                            } else {
+                                onFailure(responseJson, "User not authenticated");
                             }
-                    }
+                            break;
+
+                        case UNDEFINED:
+                            String messageForUndefined = "Undefined request type";
+                            System.err.println(messageForUndefined);
+                            onFailure(responseJson, messageForUndefined);
+                            break;
+
+                        default:
+                            String messageForDefault = "Internal server error";
+                            System.err.println(messageForDefault);
+                            onFailure(responseJson, messageForDefault);
+                        }
 
                     client.send(responseJson);
 
                 }
             }
+        }
+    }
+
+     void signIn(JSONObject receivedJson, Client client) {
+        try {
+            User user = usersService.signIn(
+                    receivedJson.getString("Login"),
+                    receivedJson.getString("Password"));
+            client.setUser(user);
+        } catch (AuthException e) {
+            onFailure(receivedJson, e.getMessage());
         }
     }
 
