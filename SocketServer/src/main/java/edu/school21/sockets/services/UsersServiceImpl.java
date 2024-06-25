@@ -2,13 +2,11 @@ package edu.school21.sockets.services;
 
 import edu.school21.sockets.models.User;
 import edu.school21.sockets.repositories.UsersRepository;
-import edu.school21.sockets.server.AuthException;
+import edu.school21.sockets.server.expetions.AuthException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class UsersServiceImpl implements UsersService {
@@ -18,16 +16,18 @@ public class UsersServiceImpl implements UsersService {
 
     @Autowired
     public UsersServiceImpl(
-            @Qualifier("usersRepositoryJdbcTemplateImpl") UsersRepository usersRepository,
-            @Qualifier("passwordEncoder") PasswordEncoder passwordEncoder) {
-        this.usersRepository = usersRepository;
-        this.passwordEncoder = passwordEncoder;
+            @Qualifier("usersRepositoryImpl") UsersRepository ur,
+            @Qualifier("passwordEncoder") PasswordEncoder pe) {
+        this.usersRepository = ur;
+        this.passwordEncoder = pe;
     }
 
     @Override
     public User signUp(String login, String password) throws AuthException {
         usersRepository.findByLogin(login)
-                .ifPresent(x -> {throw new AuthException();});
+                .ifPresent(x -> {
+                    throw new AuthException("User name is occupied");
+                });
         User user = new User(login, password);
         usersRepository.save(user);
         return user;
@@ -37,7 +37,7 @@ public class UsersServiceImpl implements UsersService {
     public User signIn(String login, String password) throws AuthException {
         return usersRepository.findByLogin(login)
                 .filter(user -> user.getPassword().equals(password))
-                .orElseThrow(AuthException::new);
+                .orElseThrow(() -> new AuthException("User doesnt exist or password are wrong"));
     }
 
 }

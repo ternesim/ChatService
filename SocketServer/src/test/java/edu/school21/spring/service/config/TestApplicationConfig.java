@@ -1,12 +1,18 @@
 package edu.school21.spring.service.config;
 
+import edu.school21.sockets.repositories.*;
 import edu.school21.sockets.server.Rest;
-import org.springframework.beans.factory.annotation.Value;
+import edu.school21.sockets.services.RoomsService;
+import edu.school21.sockets.services.RoomsServiceImpl;
+import edu.school21.sockets.services.UsersService;
+import edu.school21.sockets.services.UsersServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.sql.DataSource;
 
@@ -14,17 +20,10 @@ import javax.sql.DataSource;
 @ComponentScan("edu.school21")
 public class TestApplicationConfig {
 
-    @Value("${db.user}")
-    String DB_USER;
-
-    @Value("${db.password}")
-    String DB_PASS;
-
-    @Value("${db.url}")
-    String DB_URL;
-
-    @Value("${db.driver.name}")
-    String DB_DRIVE_CLASS_NAME;
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public DataSource dataSource() {
@@ -33,11 +32,6 @@ public class TestApplicationConfig {
         builder.addScript("/schema.sql");
         builder.addScript("/data.sql");
         return builder.build();
-    }
-
-    @Bean
-    public Rest server() {
-        return new Rest();
     }
 
 }

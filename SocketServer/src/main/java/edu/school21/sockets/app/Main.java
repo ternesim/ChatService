@@ -21,9 +21,8 @@ public class Main
             return;
         }
 
-        //ApplicationContext applicationContext = new AnnotationConfigApplicationContext(SocketsApplicationConfig.class);
-        // server = applicationContext.getBean(Server.class);
-        Rest server = new Rest();
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(SocketsApplicationConfig.class);
+        Rest server = applicationContext.getBean(Rest.class);
         server.start(6667);
     }
 }

@@ -1,16 +1,16 @@
-package edu.school21.spring.service.services;
+package edu.school21.spring.service.src;
 
 import edu.school21.sockets.server.Rest;
 import edu.school21.spring.service.config.TestApplicationConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -20,23 +20,38 @@ public class UsersServiceImplTest {
         WELCOME, SIGN_IN, SIGN_UP, ROOMS_LIST, UNDEFINED
     }
 
-    @Test
-    void WhenSgnInJsonRe() throws IOException, InterruptedException {
+    static final int SERVER_PORT = 6667;
+
+    @BeforeAll
+    static void startServer() {
         Thread th = new Thread(() -> {
+            ApplicationContext applicationContext = new AnnotationConfigApplicationContext(TestApplicationConfig.class);
+            Rest server = applicationContext.getBean(Rest.class);
             try {
-                new Rest().start(6667);
+                server.start(SERVER_PORT);
             } catch (IOException e) {
                 throw new RuntimeException(e);
-            }
-        });
+            }});
         th.start();
+    }
+
+    @Test
+    void WhenSgnInJsonRe() throws IOException, InterruptedException {
+//        Thread th = new Thread(() -> {
+//            try {
+//                new Rest().start(6667);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+//        th.start();
 
         System.out.println("Test connecting");
 
         Thread.sleep(1000);
 
 
-        Socket socket = new Socket("localhost", 6667);
+        Socket socket = new Socket("localhost", SERVER_PORT);
 
         System.out.println("Test Client connected");
 

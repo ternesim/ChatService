@@ -11,15 +11,12 @@ import java.net.SocketTimeoutException;
 import java.util.List;
 
 public class ConnectionHandler extends Thread {
-    List<Client> clients;
+    final List<Client> clients;
     ServerSocket serverSocket;
     Socket clientSocket;
-    ObjectMapper objectMapper;
 
-    public ConnectionHandler(int port, List<Client> clients)
-            throws IOException {
+    public ConnectionHandler(int port, List<Client> clients) throws IOException {
         this.clients = clients;
-        objectMapper = new ObjectMapper();
         serverSocket = new ServerSocket(port);
         serverSocket.setSoTimeout(1000);
     }
@@ -30,24 +27,12 @@ public class ConnectionHandler extends Thread {
             while (!Thread.interrupted()) {
                 try {
                     clientSocket = serverSocket.accept();
-                    clients.add(new Client(clientSocket, objectMapper));
+                    clients.add(new Client(clientSocket));
                 } catch (SocketTimeoutException ignored) {}
             }
             serverSocket.close();
         } catch (IOException e) {
-            throw new RuntimeException("Connection handler error");
+            throw new RuntimeException("Connection thread error");
         }
-    }
-
-    public List<Client> getClients() {
-        return clients;
-    }
-
-    public ServerSocket getServerSocket() {
-        return serverSocket;
-    }
-
-    public Socket getClientSocket() {
-        return clientSocket;
     }
 }

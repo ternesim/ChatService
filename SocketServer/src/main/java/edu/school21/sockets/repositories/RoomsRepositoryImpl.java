@@ -14,13 +14,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Repository
-public class RoomRepositoryImpl implements RoomsRepository {
+public class RoomsRepositoryImpl implements RoomsRepository {
     JdbcTemplate jdbcTemplate;
-
     MessageRepository messageRepository;
 
     @Autowired
-    public RoomRepositoryImpl(DataSource dataSource, MessageRepository messageRepository) {
+    public RoomsRepositoryImpl(DataSource dataSource, MessageRepository messageRepository) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.messageRepository = messageRepository;
     }
@@ -32,10 +31,20 @@ public class RoomRepositoryImpl implements RoomsRepository {
             (resultSet, rowNum) -> new Room(
                     resultSet.getLong("id"),
                     resultSet.getString("name"),
-                    resultSet.getLong("user_id")
-            ), id);
-
+                    resultSet.getLong("user_id")), id);
         return room == null ? Optional.empty() : Optional.of(room);
+    }
+
+    @Override
+    public Optional<Room> findByName(String name) {
+        List<Room> list = jdbcTemplate.query(
+                "SELECT * FROM rooms WHERE name = ?",
+                (rs, i) -> new Room(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getLong("user_id")),
+                name);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
     }
 
     @Override
@@ -44,8 +53,8 @@ public class RoomRepositoryImpl implements RoomsRepository {
                 (resultSet, rowNum) -> new Room(
                         resultSet.getLong("id"),
                         resultSet.getString("name"),
-                        resultSet.getLong("user_id")
-                ));
+                        resultSet.getLong("user_id"))
+        );
         for(Room room : rooms) {
             room.setMessageList(messageRepository.findByRoomId(room.getId()));
         }
@@ -62,9 +71,7 @@ public class RoomRepositoryImpl implements RoomsRepository {
                     ps.setString(1, entity.getName());
                     ps.setLong(2, entity.getCreatorId());
                     return ps;
-                },
-                keyHolder
-        );
+                }, keyHolder);
         entity.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
     }
 }

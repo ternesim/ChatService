@@ -1,6 +1,6 @@
 package edu.school21.sockets.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.school21.sockets.models.Room;
 import edu.school21.sockets.models.User;
 import org.json.JSONObject;
 
@@ -14,46 +14,33 @@ import java.util.Objects;
 public class Client {
     private  PrintWriter out;
     private  BufferedReader in;
-    private  String sender;
     private  Socket socket;
-    private  Long roomId;
     private User user;
-    private final ObjectMapper objectMapper;
+    private Room room;
 
-    public Client(Socket socket, PrintWriter out, BufferedReader in,
-                  String sender, Long roomId, ObjectMapper objectMapper) {
+    public Client(Socket socket) throws IOException {
         this.socket = socket;
-        this.out = out;
-        this.in = in;
-        this.sender = sender;
-        this.roomId = roomId;
-        this.objectMapper = objectMapper;
-    }
-
-    public Client(Socket socket, ObjectMapper objectMapper) throws IOException {
-        this.socket = socket;
-        this.objectMapper = objectMapper;
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
-
 
     public void send(JSONObject json) {
         out.println(json);
     }
 
-    JSONObject receiveRequest() {
-        try {
-            String s  = in.readLine();
-            System.out.println("json as string " + s);
-            return new JSONObject(s);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("message receiving error");
-        }
+    JSONObject receiveRequest() throws IOException {
+        String s = in.readLine();
+        return new JSONObject(s);
+//        try {
+//            String s = in.readLine();
+//            return new JSONObject(s);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            throw new RuntimeException("message receiving error");
+//        }
     }
 
-    public void close() {
+    public void closeConnection() {
         try {
             socket.close();
             in.close();
@@ -70,18 +57,12 @@ public class Client {
         Client client = (Client) object;
         return Objects.equals(out, client.out)
                 && Objects.equals(in, client.in)
-                && Objects.equals(sender, client.sender)
-                && Objects.equals(socket, client.socket)
-                && Objects.equals(roomId, client.roomId);
+                && Objects.equals(socket, client.socket);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(out, in, sender, socket, roomId);
-    }
-
-    public Long getRoomId() {
-        return roomId;
+        return Objects.hash(out, in, socket);
     }
 
     public PrintWriter getOut() {
@@ -90,10 +71,6 @@ public class Client {
 
     public BufferedReader getIn() {
         return in;
-    }
-
-    public String getSender() {
-        return sender;
     }
 
     public Socket getSocket() {
@@ -110,5 +87,17 @@ public class Client {
 
     public boolean isAuthenticated() {
         return user != null;
+    }
+
+    public boolean isInRoom() {
+        return room != null;
+    }
+
+    public void setRoom(Room room) {
+        this.room = room;
+    }
+
+    public Room getRoom() {
+        return room;
     }
 }

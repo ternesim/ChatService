@@ -38,7 +38,7 @@ public class Room {
         this.name = name;
     }
 
-    public List<Message> getMessageList() {
+    public List<Message> getLastMessages() {
         return messageList;
     }
 

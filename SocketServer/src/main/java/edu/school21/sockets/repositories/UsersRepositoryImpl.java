@@ -2,30 +2,24 @@ package edu.school21.sockets.repositories;
 
 import edu.school21.sockets.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 @Component
-public class UsersRepositoryJdbcTemplateImpl implements UsersRepository {
+public class UsersRepositoryImpl implements UsersRepository {
 
     JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public UsersRepositoryJdbcTemplateImpl(DataSource dataSource) {
+    public UsersRepositoryImpl(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
@@ -84,12 +78,12 @@ public class UsersRepositoryJdbcTemplateImpl implements UsersRepository {
     @Override
     public Optional<User> findByLogin(String login) {
         List<User> users = jdbcTemplate.query(
-                "SELECT * FROM \"user\" WHERE id = ?",
+                "SELECT id, login, password FROM \"user\" WHERE login = ?",
                 (rs, i) -> new User(
                         rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getString("email")
-                ), login);
+                        rs.getString("login"),
+                        rs.getString("password")),
+                login);
         return users.isEmpty() ? Optional.empty() : Optional.of(users.get(0));
     }
 }
